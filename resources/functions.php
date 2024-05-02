@@ -45,3 +45,17 @@ function fetch_array($result)
 
   return mysqli_fetch_array($result);
 }
+
+
+/* ===================== SANAITIZE SQL STRING ======================
+Input: $string (a string to be escaped)
+
+This function escapes special characters in a string for use in an SQL query.
+It uses 'mysqli_real_escape_string' to prevent SQL injection attacks.
+*/
+
+function escape_string($string)
+{
+  global $connection;
+  return mysqli_real_escape_string($connection, $string);
+}
