@@ -16,3 +16,6 @@ $connection = new mysqli("localhost", "root", "", "exclusive_boutique_db");
 if ($connection->connect_errno) {
   die("Connection error: " . $connection->connect_error);
 }
+
+// Include the functions.php file, which contains various functions for the application
+require_once("functions.php");
