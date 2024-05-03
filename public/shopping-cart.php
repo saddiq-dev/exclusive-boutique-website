@@ -1,5 +1,5 @@
 <?php require_once("../resources/config.php");
-session_start();
+// session_start();
 
 // Check if a product should be added to the cart
 if (isset($_GET['add1'])) {
