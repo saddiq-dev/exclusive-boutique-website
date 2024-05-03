@@ -1,3 +1,63 @@
+<?php
+// 🔹 Flag to track if the login attempt is invalid
+$is_invalid = false;
+
+// 🔹 Checking if the request method is POST and the 'login' button was clicked
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["login"])) {
+  // Including the configuration file to establish database connection
+  require_once "../resources/config.php";
+
+  // 🔹 Accessing the global database connection
+  global $connection;
+
+  // 🔹Preparing an SQL statement to select the user with the provided email
+  $sql = sprintf(
+    "SELECT * FROM users
+  WHERE user_email = '%s'",
+    $connection->real_escape_string($_POST["email"])
+  );
+
+  // 🔹 Executing the query
+  $result = $connection->query($sql);
+
+  // 🔹Fetching the user data from the query result
+  $user = $result->fetch_assoc();
+
+  // 🔹 Checking if the user exists and the password is correct
+  if ($user) {
+    if (password_verify($_POST["password"], $user["user_password_hash"])) {
+
+      // 🔹 Starting a new session if none exists
+      if (session_status() == PHP_SESSION_NONE) {
+        // 🔹 If the session is not started, start it
+        session_start();
+      }
+
+      // 🔹 Regenerating the session ID for security
+      session_regenerate_id();
+
+      // 🔹 Setting session variables for the user
+      $_SESSION["user_id"] = $user["user_id"];
+      $_SESSION["user_email"] = $user["user_email"];
+      $_SESSION["user_name"] = $user["user_name"];
+      $_SESSION['user_logged_in'] = true;
+
+      // 🔹 Redirecting to the homepage after successful login
+      header("Location: ../public/index.php");
+      exit;
+    }
+  }
+
+  // 🔹 Setting the invalid flag to true if login fails
+  $is_invalid = true;
+}
+?>
+<!-- 🔹Including the configuration file again, which might not be necessary if it was already included above -->
+<?php require_once("../resources/config.php") ?>
+
+
+
+
 <!doctype html>
 <html lang="en">
 
@@ -29,12 +89,18 @@
               <span class="fa fa-user-o"></span>
             </div>
             <h3 class="text-center mb-4">Have an account?</h3>
-            <form action="#" class="login-form">
+
+
+
+            <form method="post" class="login-form">
+              <?php if ($is_invalid) : ?>
+                <p class="invalid-login">Invalid login</p>
+              <?php endif; ?>
               <div class="form-group">
-                <input type="text" class="form-control rounded-left" placeholder="Username" required>
+                <input name="email" type="email" value="<?= htmlspecialchars($_POST["email"] ?? "") ?>" class="form-control rounded-left" placeholder="Email" required>
               </div>
               <div class="form-group d-flex">
-                <input type="password" class="form-control rounded-left" placeholder="Password" required>
+                <input name="password" type="password" class="form-control rounded-left" placeholder="Password" required>
               </div>
               <div class="form-group d-md-flex">
                 <div class="w-50">
@@ -48,9 +114,13 @@
                 </div>
               </div>
               <div class="form-group">
-                <button type="submit" class="btn btn-primary rounded submit p-3 px-5">Get Started</button>
+                <button type="submit" name="login" class="btn btn-primary rounded submit p-3 px-5">Get Started</button>
               </div>
             </form>
+
+
+
+
           </div>
         </div>
       </div>

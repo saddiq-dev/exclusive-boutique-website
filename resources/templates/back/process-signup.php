@@ -57,8 +57,8 @@ $stmt->bind_param(
 
 if ($stmt->execute()) {
 
-  header("Location: ../../../public/");
-  header("Location: ../../../public/index.php");
+  // header("Location: ../../../public/");
+  header("Location: ../../../public/login.php");
   exit;
 } else {
 
