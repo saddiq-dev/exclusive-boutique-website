@@ -1,376 +1,235 @@
-<!DOCTYPE html>
-<html lang="zxx">
+<?php require_once("../resources/config.php");
+session_start();
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="description" content="Male_Fashion Template">
-    <meta name="keywords" content="Male_Fashion, unica, creative, html">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Male-Fashion | Template</title>
+// Check if a product should be added to the cart
+if (isset($_GET['add1'])) {
 
-    <!-- Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap"
-    rel="stylesheet">
+    // Query for the database to get product information
+    $query = query("SELECT * FROM products WHERE product_id=" . escape_string($_GET['add']) . " ");
+    confirm($query);
 
-    <!-- Css Styles -->
-    <link rel="stylesheet" href="css/bootstrap.min.css" type="text/css">
-    <link rel="stylesheet" href="css/font-awesome.min.css" type="text/css">
-    <link rel="stylesheet" href="css/elegant-icons.css" type="text/css">
-    <link rel="stylesheet" href="css/magnific-popup.css" type="text/css">
-    <link rel="stylesheet" href="css/nice-select.css" type="text/css">
-    <link rel="stylesheet" href="css/owl.carousel.min.css" type="text/css">
-    <link rel="stylesheet" href="css/slicknav.min.css" type="text/css">
-    <link rel="stylesheet" href="css/style.css" type="text/css">
-</head>
+    while ($row = fetch_array($query)) {
 
-<body>
-    <!-- Page Preloder -->
-    <div id="preloder">
-        <div class="loader"></div>
-    </div>
+        // Check if the product quantity is available
+        if ($row['product_quantity'] != $_SESSION['product_' . $_GET['add']]) {
 
-    <!-- Offcanvas Menu Begin -->
-    <div class="offcanvas-menu-overlay"></div>
-    <div class="offcanvas-menu-wrapper">
-        <div class="offcanvas__option">
-            <div class="offcanvas__links">
-                <a href="#">Sign in</a>
-                <a href="#">FAQs</a>
-            </div>
-            <div class="offcanvas__top__hover">
-                <span>Usd <i class="arrow_carrot-down"></i></span>
-                <ul>
-                    <li>USD</li>
-                    <li>EUR</li>
-                    <li>USD</li>
-                </ul>
-            </div>
-        </div>
-        <div class="offcanvas__nav__option">
-            <a href="#" class="search-switch"><img src="img/icon/search.png" alt=""></a>
-            <a href="#"><img src="img/icon/heart.png" alt=""></a>
-            <a href="#"><img src="img/icon/cart.png" alt=""> <span>0</span></a>
-            <div class="price">$0.00</div>
-        </div>
-        <div id="mobile-menu-wrap"></div>
-        <div class="offcanvas__text">
-            <p>Free shipping, 30-day return or refund guarantee.</p>
-        </div>
-    </div>
-    <!-- Offcanvas Menu End -->
+            // Increase the quantity of the product in the cart
+            $_SESSION['product_' . $_GET['add']] += 1;
+            redirect("../public/checkout.php");
+        } else {
 
-    <!-- Header Section Begin -->
-    <header class="header">
-        <div class="header__top">
-            <div class="container">
-                <div class="row">
-                    <div class="col-lg-6 col-md-7">
-                        <div class="header__top__left">
-                            <p>Free shipping, 30-day return or refund guarantee.</p>
+            // Display a message if the product is out of stock
+            set_message("We only have " . $row['product_quantity'] . " " . "Available");
+            redirect("../public/checkout.php");
+        }
+    }
+}
+
+
+// Check if a product should be added to the cart
+if (isset($_GET['add'])) {
+
+    // Query for the database to get product information
+    $query = query("SELECT * FROM products WHERE product_id=" . escape_string($_GET['add']) . " ");
+    confirm($query);
+
+    while ($row = fetch_array($query)) {
+
+        // Check if it's a free product
+        if ($row['product_cat_id'] == 7) {
+            // Check if the free product is already in the cart
+            if (isset($_SESSION['product_' . $_GET['add']]) && $_SESSION['product_' . $_GET['add']] >= 1) {
+                // Prevent increasing quantity for free products
+                set_message("You can only have one unit of this free product in your cart.");
+            } else {
+                // Add free product to the cart with quantity 1
+                $_SESSION['product_' . $_GET['add']] = 1;
+            }
+        } else {
+            // For non-free products, check if the product quantity is available and adjust as needed
+            if ($row['product_quantity'] > $_SESSION['product_' . $_GET['add']]) {
+                $_SESSION['product_' . $_GET['add']] += 1;
+            } else {
+                // Display a message if the product is out of stock
+                set_message("We only have " . $row['product_quantity'] . " of this product available");
+            }
+        }
+
+        // Redirect to the checkout page
+        redirect("../public/checkout.php");
+    }
+}
+
+
+// Check if a product should be removed from the cart
+if (isset($_GET['remove'])) {
+
+    // Decrease the quantity of the product in the cart
+    $_SESSION['product_' . $_GET['remove']]--;
+
+    if ($_SESSION['product_' . $_GET['remove']] < 1) {
+        // Remove the product from the cart if the quantity reaches 0
+        unset($_SESSION['item_total']);
+        unset($_SESSION['item_quantity']);
+
+        redirect("../public/checkout.php");
+    } else {
+        redirect("../public/checkout.php");
+    }
+}
+
+// Check if a product should be deleted from the cart
+if (isset($_GET['delete'])) {
+
+    // Set the quantity of the product in the cart to 0, effectively deleting it
+    $_SESSION['product_' . $_GET['delete']] = '0';
+
+    // Reset the item total and item quantity
+    unset($_SESSION['item_total']);
+    unset($_SESSION['item_quantity']);
+
+    redirect("../public/checkout.php");
+}
+
+// Function to display the cart contents
+function cart()
+{
+
+    $total = 0;
+    $item_quantity = 0;
+    // $line_items[] = null;
+
+    foreach ($_SESSION as $name => $value) {
+
+        if ($value > 0) {
+            if (substr($name, 0, 8) == "product_") {
+
+                $length = strlen($name) - 8;
+                $id = substr($name, 8, $length);
+                $sub = 0; // Initialize $sub here
+
+                // Query the database to get product information
+                $query = query("SELECT * FROM products WHERE product_id = " . escape_string($id) . " ");
+                confirm($query);
+
+                while ($row = fetch_array($query)) {
+
+                    // Calculate the subtotal for each product
+                    $sub = $row['product_price'] * $value;
+                    $item_quantity  += $value;
+
+
+                    // $line_items[] = ['price' => $row['stripe_product_price'], 'quantity' => $value];
+
+
+                    // Display the product information in the cart
+                    $product = <<<DELIMETER
+                        <tr>
+                        <td class="product__cart__item">
+                        <div class="product__cart__item__pic">
+                            <img src="./assets/img/product/{$row['product_img']}" alt="" width="100" height="100">
                         </div>
-                    </div>
-                    <div class="col-lg-6 col-md-5">
-                        <div class="header__top__right">
-                            <div class="header__top__links">
-                                <a href="#">Sign in</a>
-                                <a href="#">FAQs</a>
-                            </div>
-                            <div class="header__top__hover">
-                                <span>Usd <i class="arrow_carrot-down"></i></span>
-                                <ul>
-                                    <li>USD</li>
-                                    <li>EUR</li>
-                                    <li>USD</li>
-                                </ul>
-                            </div>
+                        <div class="product__cart__item__text">
+                            <h6>{$row['product_name']}</h6>
+                            <h5>{$row['product_price']}</h5>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-3 col-md-3">
-                    <div class="header__logo">
-                        <a href="./index.html"><img src="img/logo.png" alt=""></a>
-                    </div>
-                </div>
-                <div class="col-lg-6 col-md-6">
-                    <nav class="header__menu mobile-menu">
-                        <ul>
-                            <li><a href="./index.html">Home</a></li>
-                            <li class="active"><a href="./shop.html">Shop</a></li>
-                            <li><a href="#">Pages</a>
-                                <ul class="dropdown">
-                                    <li><a href="./about.html">About Us</a></li>
-                                    <li><a href="./shop-details.html">Shop Details</a></li>
-                                    <li><a href="./shopping-cart.html">Shopping Cart</a></li>
-                                    <li><a href="./checkout.html">Check Out</a></li>
-                                    <li><a href="./blog-details.html">Blog Details</a></li>
-                                </ul>
-                            </li>
-                            <li><a href="./blog.html">Blog</a></li>
-                            <li><a href="./contact.html">Contacts</a></li>
-                        </ul>
-                    </nav>
-                </div>
-                <div class="col-lg-3 col-md-3">
-                    <div class="header__nav__option">
-                        <a href="#" class="search-switch"><img src="img/icon/search.png" alt=""></a>
-                        <a href="#"><img src="img/icon/heart.png" alt=""></a>
-                        <a href="#"><img src="img/icon/cart.png" alt=""> <span>0</span></a>
-                        <div class="price">$0.00</div>
-                    </div>
-                </div>
-            </div>
-            <div class="canvas__open"><i class="fa fa-bars"></i></div>
-        </div>
-    </header>
-    <!-- Header Section End -->
-
-    <!-- Breadcrumb Section Begin -->
-    <section class="breadcrumb-option">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="breadcrumb__text">
-                        <h4>Shopping Cart</h4>
-                        <div class="breadcrumb__links">
-                            <a href="./index.html">Home</a>
-                            <a href="./shop.html">Shop</a>
-                            <span>Shopping Cart</span>
+                        </td>
+                        <td class="quantity__item">
+                        <div class="quantity">
+                        <a href="./shopping-cart.php?remove={$row['product_id']}">
+                        <i class="fa fa-arrow-left" style="color: gray;"></i>
+                        </a>
+                        <span>{$value}</span>
+                        <a href="./shopping-cart.php?add={$row['product_id']}">
+                        <i class="fa fa-arrow-right" style="color: gray;"></i>
+                        </a>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    <!-- Breadcrumb Section End -->
+                        </td>
+                        <td class="cart__price">&#36;{$sub}</td>
+                        
+                        <td class="cart__close">
+                        <a href="./shopping-cart.php?delete={$row['product_id']}">
+                        <i class="fa fa-close"></i>
+                        </a>
+                        </td>
+                        
+                    </tr>
+                    DELIMETER;
+                    echo $product;
+                }
 
-    <!-- Shopping Cart Section Begin -->
-    <section class="shopping-cart spad">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-8">
-                    <div class="shopping__cart__table">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Product</th>
-                                    <th>Quantity</th>
-                                    <th>Total</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="product__cart__item">
-                                        <div class="product__cart__item__pic">
-                                            <img src="img/shopping-cart/cart-1.jpg" alt="">
-                                        </div>
-                                        <div class="product__cart__item__text">
-                                            <h6>T-shirt Contrast Pocket</h6>
-                                            <h5>$98.49</h5>
-                                        </div>
-                                    </td>
-                                    <td class="quantity__item">
-                                        <div class="quantity">
-                                            <div class="pro-qty-2">
-                                                <input type="text" value="1">
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="cart__price">$ 30.00</td>
-                                    <td class="cart__close"><i class="fa fa-close"></i></td>
-                                </tr>
-                                <tr>
-                                    <td class="product__cart__item">
-                                        <div class="product__cart__item__pic">
-                                            <img src="img/shopping-cart/cart-2.jpg" alt="">
-                                        </div>
-                                        <div class="product__cart__item__text">
-                                            <h6>Diagonal Textured Cap</h6>
-                                            <h5>$98.49</h5>
-                                        </div>
-                                    </td>
-                                    <td class="quantity__item">
-                                        <div class="quantity">
-                                            <div class="pro-qty-2">
-                                                <input type="text" value="1">
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="cart__price">$ 32.50</td>
-                                    <td class="cart__close"><i class="fa fa-close"></i></td>
-                                </tr>
-                                <tr>
-                                    <td class="product__cart__item">
-                                        <div class="product__cart__item__pic">
-                                            <img src="img/shopping-cart/cart-3.jpg" alt="">
-                                        </div>
-                                        <div class="product__cart__item__text">
-                                            <h6>Basic Flowing Scarf</h6>
-                                            <h5>$98.49</h5>
-                                        </div>
-                                    </td>
-                                    <td class="quantity__item">
-                                        <div class="quantity">
-                                            <div class="pro-qty-2">
-                                                <input type="text" value="1">
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="cart__price">$ 47.00</td>
-                                    <td class="cart__close"><i class="fa fa-close"></i></td>
-                                </tr>
-                                <tr>
-                                    <td class="product__cart__item">
-                                        <div class="product__cart__item__pic">
-                                            <img src="img/shopping-cart/cart-4.jpg" alt="">
-                                        </div>
-                                        <div class="product__cart__item__text">
-                                            <h6>Basic Flowing Scarf</h6>
-                                            <h5>$98.49</h5>
-                                        </div>
-                                    </td>
-                                    <td class="quantity__item">
-                                        <div class="quantity">
-                                            <div class="pro-qty-2">
-                                                <input type="text" value="1">
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="cart__price">$ 30.00</td>
-                                    <td class="cart__close"><i class="fa fa-close"></i></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="row">
-                        <div class="col-lg-6 col-md-6 col-sm-6">
-                            <div class="continue__btn">
-                                <a href="#">Continue Shopping</a>
-                            </div>
-                        </div>
-                        <div class="col-lg-6 col-md-6 col-sm-6">
-                            <div class="continue__btn update__btn">
-                                <a href="#"><i class="fa fa-spinner"></i> Update cart</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="cart__discount">
-                        <h6>Discount codes</h6>
-                        <form action="#">
-                            <input type="text" placeholder="Coupon code">
-                            <button type="submit">Apply</button>
-                        </form>
-                    </div>
-                    <div class="cart__total">
-                        <h6>Cart total</h6>
-                        <ul>
-                            <li>Subtotal <span>$ 169.50</span></li>
-                            <li>Total <span>$ 169.50</span></li>
-                        </ul>
-                        <a href="#" class="primary-btn">Proceed to checkout</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    <!-- Shopping Cart Section End -->
+                // if (!empty($line_items)) {
 
-    <!-- Footer Section Begin -->
-    <footer class="footer">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-3 col-md-6 col-sm-6">
-                    <div class="footer__about">
-                        <div class="footer__logo">
-                            <a href="#"><img src="img/footer-logo.png" alt=""></a>
-                        </div>
-                        <p>The customer is at the heart of our unique business model, which includes design.</p>
-                        <a href="#"><img src="img/payment.png" alt=""></a>
-                    </div>
-                </div>
-                <div class="col-lg-2 offset-lg-1 col-md-3 col-sm-6">
-                    <div class="footer__widget">
-                        <h6>Shopping</h6>
-                        <ul>
-                            <li><a href="#">Clothing Store</a></li>
-                            <li><a href="#">Trending Shoes</a></li>
-                            <li><a href="#">Accessories</a></li>
-                            <li><a href="#">Sale</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-lg-2 col-md-3 col-sm-6">
-                    <div class="footer__widget">
-                        <h6>Shopping</h6>
-                        <ul>
-                            <li><a href="#">Contact Us</a></li>
-                            <li><a href="#">Payment Methods</a></li>
-                            <li><a href="#">Delivary</a></li>
-                            <li><a href="#">Return & Exchanges</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-lg-3 offset-lg-1 col-md-6 col-sm-6">
-                    <div class="footer__widget">
-                        <h6>NewLetter</h6>
-                        <div class="footer__newslatter">
-                            <p>Be the first to know about new arrivals, look books, sales & promos!</p>
-                            <form action="#">
-                                <input type="text" placeholder="Your email">
-                                <button type="submit"><span class="icon_mail_alt"></span></button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-lg-12 text-center">
-                    <div class="footer__copyright__text">
-                        <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-                        <p>Copyright ©
-                            <script>
-                                document.write(new Date().getFullYear());
-                            </script>2020
-                            All rights reserved | This template is made with <i class="fa fa-heart-o"
-                            aria-hidden="true"></i> by <a href="https://colorlib.com" target="_blank">Colorlib</a>
-                        </p>
-                        <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </footer>
-    <!-- Footer Section End -->
+                //     try {
+                //         $stripe = new \Stripe\StripeClient($_ENV['STRIPE_SK_KEY']);
 
-    <!-- Search Begin -->
-    <div class="search-model">
-        <div class="h-100 d-flex align-items-center justify-content-center">
-            <div class="search-close-switch">+</div>
-            <form class="search-model-form">
-                <input type="text" id="search-input" placeholder="Search here.....">
-            </form>
-        </div>
-    </div>
-    <!-- Search End -->
+                //         // Retrieve customer email from the session
+                //         $customer_email = isset($_SESSION['user_email']) ? $_SESSION['user_email'] : null;
+                //         $customer_name = isset($_SESSION['user_name']) ? $_SESSION['user_name'] : null;
 
-    <!-- Js Plugins -->
-    <script src="js/jquery-3.3.1.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    <script src="js/jquery.nice-select.min.js"></script>
-    <script src="js/jquery.nicescroll.min.js"></script>
-    <script src="js/jquery.magnific-popup.min.js"></script>
-    <script src="js/jquery.countdown.min.js"></script>
-    <script src="js/jquery.slicknav.js"></script>
-    <script src="js/mixitup.min.js"></script>
-    <script src="js/owl.carousel.min.js"></script>
-    <script src="js/main.js"></script>
-</body>
+                //         // Search for existing customer by email
+                //         $existingCustomers = $stripe->customers->all(['email' => $customer_email, 'limit' => 1]);
 
-</html>
+                //         if (count($existingCustomers->data) > 0) {
+                //             // Customer already exists in Stripe, use the existing customer
+                //             $customer = $existingCustomers->data[0];
+                //         } else {
+                //             // Create a Stripe Customer
+                //             $customer = $stripe->customers->create([
+                //                 'email' => $customer_email,
+                //                 'name' => $customer_name,
+                //                 // Add other customer details if necessary, like 'name'
+                //             ]);
+                //         }
+
+                //         $session = $stripe->checkout->sessions->create([
+                //             'customer' => $customer->id,
+                //             'billing_address_collection' => 'required',
+                //             'shipping_address_collection' => [
+                //                 'allowed_countries' => ['TT'], // List the countries you want to ship to
+                //             ],
+                //             'success_url' => 'http://localhost/healthify/public/order-success.php?session_id={CHECKOUT_SESSION}',
+                //             'cancel_url' => 'http://localhost/healthify/public/checkout.php',
+                //             'payment_method_types' => ['card'],
+                //             'mode' => 'payment',
+                //             'line_items' => [$line_items]
+                //         ]);
+
+                //         $_SESSION['checkout_session_id'] =  $session->id;
+                //     } catch (Exception $exception) {
+                //         echo $exception->getMessage();
+                //     }
+                // }
+
+                // Update the session variables for item total and item quantity
+                $_SESSION['item_total'] = $total += $sub;
+                $_SESSION['item_quantity'] = $item_quantity;
+            }
+        }
+    }
+}
+
+
+function show_buy_button()
+{
+    if (isset($_SESSION['user_logged_in']) && $_SESSION['user_logged_in'] == true) {
+        // User is logged in, show the Buy Now button
+        $buy_button = <<<DELIMETER
+          <button type="button" id="buybtn" class="btn">Buy Now</button>
+      DELIMETER;
+    } else {
+        // User is not logged in, show a message or redirect
+        $buy_button = <<<DELIMETER
+          <p>Please <a href="login.php">log in</a> to proceed with your purchase.</p>
+      DELIMETER;
+    }
+    return $buy_button;
+}
+
+
+// if (isset($_SESSION['item_quantity']) && $_SESSION['item_quantity'] >= 1) {
+// <input type="image" name="upload" border="0"
+// src="https://www.paypalobjects.com/en_US/i/btn/btn_buynow_LG.gif"
+// alt="PayPal - The safer, easier way to pay online">
+
+// <!--    <input type="submit" name="upload" class="btn btn-primary" value="Buy Now">-->

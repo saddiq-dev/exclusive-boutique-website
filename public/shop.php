@@ -215,7 +215,7 @@
                                     </div>
                                     <div class="product__item__text">
                                         <h6>{$row['product_name']}</h6>
-                                        <a href="../resources/cart.php?add={$row['product_id']}" class="add-cart">+ Add To Cart</a>
+                                        <a href="./shopping-cart.php?add={$row['product_id']}" class="add-cart">+ Add To Cart</a>
                                         <div class="rating">
                                             <i class="fa fa-star-o"></i>
                                             <i class="fa fa-star-o"></i>

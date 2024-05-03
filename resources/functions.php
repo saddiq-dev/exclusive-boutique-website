@@ -59,3 +59,44 @@ function escape_string($string)
   global $connection;
   return mysqli_real_escape_string($connection, $string);
 }
+
+
+
+
+function last_id()
+{
+
+  global $connection;
+
+  return mysqli_insert_id($connection);
+}
+
+
+function redirect($location)
+{
+  header("Location: $location");
+}
+
+
+
+function set_message($msg)
+{
+
+  if (!empty($msg)) {
+    $_SESSION['message'] = "<p class='alert-message'>" . $msg . "<p>";
+  } else {
+
+    $msg = "";
+  }
+}
+
+
+function display_message()
+{
+
+  if (isset($_SESSION['message'])) {
+
+    echo $_SESSION['message'];
+    unset($_SESSION['message']);
+  }
+}

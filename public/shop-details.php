@@ -98,7 +98,7 @@ while ($row = fetch_array($query)) :
                                         <input type="text" value="1">
                                     </div>
                                 </div>
-                                <a href="../resources/cart.php?add=<?php echo $row['product_id']; ?>" class="primary-btn">add to cart</a>
+                                <a href="./shopping-cart.php?add=<?php echo $row['product_id']; ?>" class="primary-btn">add to cart</a>
                             </div>
                             <div class="product__details__btns__option">
                                 <a href="#"><i class="fa fa-heart"></i> add to wishlist</a>
@@ -154,7 +154,7 @@ while ($row = fetch_array($query)) :
                             </div>
                             <div class="product__item__text">
                                 <h6>{$row['product_name']}</h6>
-                                <a href="../resources/cart.php?add={$row['product_id']}" class="add-cart">+ Add To Cart</a>
+                                <a href="./shopping-cart.php?add={$row['product_id']}" class="add-cart">+ Add To Cart</a>
                                 <div class="rating">
                                     <i class="fa fa-star-o"></i>
                                     <i class="fa fa-star-o"></i>
