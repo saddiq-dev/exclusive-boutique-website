@@ -21,6 +21,18 @@
   <link rel="stylesheet" href="./assets/css/owl.carousel.min.css" type="text/css" />
   <link rel="stylesheet" href="./assets/css/slicknav.min.css" type="text/css" />
   <link rel="stylesheet" href="./assets/css/style.css" type="text/css" />
+
+  <script>
+    (function(w, d) {
+      w.CollectId = "663471711063215eaa11c214";
+      var h = d.head || d.getElementsByTagName("head")[0];
+      var s = d.createElement("script");
+      s.setAttribute("type", "text/javascript");
+      s.async = true;
+      s.setAttribute("src", "https://collectcdn.com/launcher.js");
+      h.appendChild(s);
+    })(window, document);
+  </script>
 </head>
 
 <body>
