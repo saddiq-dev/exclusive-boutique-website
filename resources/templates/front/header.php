@@ -1,3 +1,23 @@
+<?php
+
+// session_start();
+if (isset($_SESSION["user_id"])) {
+
+  // $mysqli = require __DIR__ . "../../../resources/config.php";
+  $mysqli = require  "../resources/config.php";
+  $sql = "SELECT * FROM users
+  WHERE user_id = {$_SESSION["user_id"]}";
+  $result = $connection->query($sql);
+  $useracc = $result->fetch_assoc();
+}
+
+?>
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="zxx">
 
@@ -46,9 +66,13 @@
   <div class="offcanvas-menu-wrapper">
     <div class="offcanvas__option">
       <div class="offcanvas__links">
-        <a href="./login.php">Sign in</a>
-        <a href="./login.php">Sign Up</a>
-        <a href="./logout.php">Logout</a>
+        <?php if (isset($useracc)) : ?>
+          <a href=""> Welcome <?= htmlspecialchars($useracc["user_name"]) ?></a>
+          <a href="./logout.php">Logout</a>
+        <?php else : ?>
+          <a href="./login.php">Sign in</a>
+          <a href="./register">Sign Up</a>
+        <?php endif; ?>
       </div>
       <div class="offcanvas__top__hover">
         <span>Usd <i class="arrow_carrot-down"></i></span>
@@ -85,9 +109,13 @@
           <div class="col-lg-6 col-md-5">
             <div class="header__top__right">
               <div class="header__top__links">
-                <a href="./login.php">Sign in</a>
-                <a href="./register.php">Sign up</a>
-                <a href="./logout.php">Logout</a>
+                <?php if (isset($useracc)) : ?>
+                  <a href=""> Welcome <?= htmlspecialchars($useracc["user_name"]) ?></a>
+                  <a href="./logout.php">Logout</a>
+                <?php else : ?>
+                  <a href="./login.php">Sign in</a>
+                  <a href="./register.php">Sign up</a>
+                <?php endif; ?>
               </div>
               <div class="header__top__hover">
                 <span>Usd <i class="arrow_carrot-down"></i></span>
