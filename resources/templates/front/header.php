@@ -48,6 +48,7 @@
       <div class="offcanvas__links">
         <a href="./login.php">Sign in</a>
         <a href="./login.php">Sign Up</a>
+        <a href="./logout.php">Logout</a>
       </div>
       <div class="offcanvas__top__hover">
         <span>Usd <i class="arrow_carrot-down"></i></span>
@@ -86,6 +87,7 @@
               <div class="header__top__links">
                 <a href="./login.php">Sign in</a>
                 <a href="./register.php">Sign up</a>
+                <a href="./logout.php">Logout</a>
               </div>
               <div class="header__top__hover">
                 <span>Usd <i class="arrow_carrot-down"></i></span>

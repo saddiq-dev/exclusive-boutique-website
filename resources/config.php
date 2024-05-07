@@ -1,5 +1,15 @@
 <?php
 
+// Start output buffering to capture and control the output
+ob_start();
+
+// Check if the session is not already started, and if not, start it
+if (session_status() == PHP_SESSION_NONE) {
+  // If the session is not started, start it
+  session_start();
+}
+// session_destroy();
+
 // Define a constant for the directory separator (DS) for file path consistency
 defined("DS") ? null : define("DS", DIRECTORY_SEPARATOR);
 

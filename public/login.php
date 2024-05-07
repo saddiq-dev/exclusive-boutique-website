@@ -122,10 +122,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["login"])) {
                 <button type="submit" name="login" class="btn btn-primary rounded submit p-3 px-5">Sign In</button>
               </div>
             </form>
-
-
-
-
           </div>
         </div>
       </div>
